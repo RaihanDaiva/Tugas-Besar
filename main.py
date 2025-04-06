@@ -18,6 +18,8 @@ class ShowImage(QMainWindow):
         self.button_SaveCitraHasil.clicked.connect(self.saveHasil)
         self.action_Grayscale.triggered.connect(self.grayscale)
         self.action_Biner.triggered.connect(self.biner)
+        self.button_Brightness.clicked.connect(self.brightness)
+        self.button_Contrast.clicked.connect(self.contrast)
         self.button_Sharpening.clicked.connect(self.sharpening)
         
     #Fungsi untuk membaca citra
@@ -74,6 +76,38 @@ class ShowImage(QMainWindow):
                     b = 255
                 
                 self.Image.itemset((i, j), b)   #untuk mengubah nilai pixel (i, j) menjadi b(b itu adalah variabel yang menyimpan nilai pixel baru) 
+        self.displayImage(2)
+
+    def brightness(self):
+        try:
+            self.Image = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)
+        except:
+            pass
+        H, W = self.Image.shape[:2]
+        brightness = 80
+        for i in range(H):
+            for j in range(W):
+                a = self.Image.item(i, j)
+                b = np.clip(a + brightness, 0, 255)
+
+                self.Image[i, j] = b
+
+        self.displayImage(2)
+
+    def contrast(self):
+        try:
+            self.Image = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)
+        except:
+            pass
+        H, W = self.Image.shape[:2]
+        contrast = 1.7
+        for i in range(H):
+            for j in range(W):
+                a = self.Image.item(i, j)
+                b = np.clip(a * contrast, 0, 255)
+
+                self.Image[i, j] = b
+
         self.displayImage(2)
 
     def sharpening(self):
