@@ -26,7 +26,12 @@ class ShowImage(QMainWindow):
         self.slider_brightness.setMinimum(-100)
         self.slider_brightness.setMaximum(100)
         self.slider_brightness.setValue(0)  # Default = no brightness change
-        self.slider_brightness.valueChanged.connect(self.adjust_brightness)
+        self.slider_brightness.valueChanged.connect(self.update_image)
+
+        self.slider_contrast.setMinimum(-100)
+        self.slider_contrast.setMaximum(100)
+        self.slider_contrast.setValue(0)  # Default = no brightness change
+        self.slider_contrast.valueChanged.connect(self.update_image)
 
 
     #Fungsi untuk membaca citra
@@ -160,16 +165,28 @@ class ShowImage(QMainWindow):
         self.Image = np.clip(self.Image, 0, 255).astype(np.uint8)
         self.displayImage(2)
 
-    def adjust_brightness(self, value):
+    def update_image(self):
         if self.image_ori is None:
-            return  # error handling
+            return
 
+        # Get values from sliders
+        brightness = self.slider_brightness.value()
+        contrast = self.slider_contrast.value()
+
+        # Start from original
         img = self.image_ori.astype(np.float32)
-        img += value  # Adjust brightness
 
+        # Apply brightness
+        img += brightness
+
+        # Apply contrast
+        img = (img - 127) * (1 + contrast / 100.0) + 127
+
+        # Final clip and convert
         img = np.clip(img, 0, 255).astype(np.uint8)
-        self.Image = img  # update current working image
-        self.displayImage(2)
+
+        self.Image = img
+        self.displayImage(mode=2)
         
     #Fungsi untuk menampilkan citra pada GUI
     def displayImage(self, mode=1):
