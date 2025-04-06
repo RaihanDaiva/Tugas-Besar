@@ -188,21 +188,29 @@ class ShowImage(QMainWindow):
         # Siapkan gambar hasil smoothing
         output = np.zeros((height, width), dtype=np.uint8)
 
+        # Definisikan kernel 3x3 mean filter
+        kernel = np.array([
+            [1, 1, 1],
+            [1, 1, 1],
+            [1, 1, 1]
+        ], dtype=np.float32) / 9  # rata-rata
+
         # Looping untuk tiap piksel (kecuali tepi)
         for y in range(1, height - 1):
             for x in range(1, width - 1):
                 # Ambil blok 3x3 dari gambar asli
                 block = img[y-1:y+2, x-1:x+2]
-                
-                # Hitung rata-ratanya
-                mean_value = int(np.sum(block) / 9)
+
+                # Hitung hasil konvolusi manual
+                value = np.sum(block * kernel)
                 
                 # Simpan ke gambar hasil
-                output[y, x] = mean_value
+                output[y, x] = int(value)
 
         # Perbarui self.Image dengan hasil smoothing
         self.Image = output
         self.displayImage(2)
+
 
     def update_image(self):
         if self.Image_ori is None:
