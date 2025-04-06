@@ -25,6 +25,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QSlider" name="slider_brightness">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="button_Contrast">
         <property name="text">
          <string>Contrast</string>

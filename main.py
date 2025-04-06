@@ -23,9 +23,16 @@ class ShowImage(QMainWindow):
         self.button_Sharpening.clicked.connect(self.sharpening)
         self.button_simulateDay.clicked.connect(self.simulate_day)
 
+        self.slider_brightness.setMinimum(-100)
+        self.slider_brightness.setMaximum(100)
+        self.slider_brightness.setValue(0)  # Default = no brightness change
+        self.slider_brightness.valueChanged.connect(self.adjust_brightness)
+
+
     #Fungsi untuk membaca citra
     def load(self):
         self.Image = cv2.imread('sample2.jpg')
+        self.image_ori = self.Image
         self.displayImage(1)        
     
     #Fungsi untuk menyimpan citra hasil
@@ -151,6 +158,17 @@ class ShowImage(QMainWindow):
 
         # Clip values to [0, 255] and convert back to uint8
         self.Image = np.clip(self.Image, 0, 255).astype(np.uint8)
+        self.displayImage(2)
+
+    def adjust_brightness(self, value):
+        if self.image_ori is None:
+            return  # error handling
+
+        img = self.image_ori.astype(np.float32)
+        img += value  # Adjust brightness
+
+        img = np.clip(img, 0, 255).astype(np.uint8)
+        self.Image = img  # update current working image
         self.displayImage(2)
         
     #Fungsi untuk menampilkan citra pada GUI
