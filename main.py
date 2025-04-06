@@ -36,9 +36,15 @@ class ShowImage(QMainWindow):
 
     #Fungsi untuk membaca citra
     def load(self):
-        self.Image = cv2.imread('sample2.jpg')
-        self.image_ori = self.Image
-        self.displayImage(1)        
+        file_name, _ = QFileDialog.getOpenFileName(self, "Pilih Gambar", "", "Image Files (*.png *.jpg *.jpeg *.bmp)")
+
+        if file_name:
+            self.Image = cv2.imread(file_name)
+            self.Image_ori = self.Image
+            if self.Image is None:
+                QMessageBox.warning(self, "Error", "Gagal membaca gambar.")
+                return
+            self.displayImage(1)
     
     #Fungsi untuk menyimpan citra hasil
     def saveHasil(self):
@@ -166,7 +172,7 @@ class ShowImage(QMainWindow):
         self.displayImage(2)
 
     def update_image(self):
-        if self.image_ori is None:
+        if self.Image_ori is None:
             return
 
         # Get values from sliders
@@ -174,7 +180,7 @@ class ShowImage(QMainWindow):
         contrast = self.slider_contrast.value()
 
         # Start from original
-        img = self.image_ori.astype(np.float32)
+        img = self.Image_ori.astype(np.float32)
 
         # Apply brightness
         img += brightness
