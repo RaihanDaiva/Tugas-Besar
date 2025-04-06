@@ -88,11 +88,18 @@ class ShowImage(QMainWindow):
         img = QImage(self.Image, self.Image.shape[1], self.Image.shape[0],
                      self.Image.strides[0], qformat)
         img = img.rgbSwapped()
+        pix = QPixmap.fromImage(img)
 
         if mode == 1:
-            self.citra_Asli.setPixmap(QPixmap.fromImage(img))
+            scaled_pix = pix.scaled(self.citra_Asli.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.citra_Asli.setPixmap(scaled_pix)
+            self.citra_Asli.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            # self.citra_Asli.setPixmap(QPixmap.fromImage(img))
         elif mode == 2:
-            self.citra_hasil.setPixmap(QPixmap.fromImage(img))
+            scaled_pix = pix.scaled(self.citra_hasil.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.citra_hasil.setPixmap(scaled_pix)
+            self.citra_hasil.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+            # self.citra_hasil.setPixmap(QPixmap.fromImage(img))
             
 app = QtWidgets.QApplication(sys.argv)
 window = ShowImage()
