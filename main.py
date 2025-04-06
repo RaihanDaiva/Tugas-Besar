@@ -18,6 +18,7 @@ class ShowImage(QMainWindow):
         self.button_SaveCitraHasil.clicked.connect(self.saveHasil)
         self.action_Grayscale.triggered.connect(self.grayscale)
         self.action_Biner.triggered.connect(self.biner)
+        self.button_Sharpening.clicked.connect(self.sharpening)
         
     #Fungsi untuk membaca citra
     def load(self):
@@ -73,6 +74,27 @@ class ShowImage(QMainWindow):
                     b = 255
                 
                 self.Image.itemset((i, j), b)   #untuk mengubah nilai pixel (i, j) menjadi b(b itu adalah variabel yang menyimpan nilai pixel baru) 
+        self.displayImage(2)
+
+    def sharpening(self):
+        if self.Image is None:
+            QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
+            return
+
+        if len(self.Image.shape) == 2:
+            # Citra sudah grayscale
+            image_to_sharpen = self.Image
+        else:
+            # Jika masih berwarna, konversi dulu ke grayscale
+            image_to_sharpen = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)
+
+            # Kernel sharpening
+        kernel = np.array([[0, -1, 0],
+                           [-1, 5, -1],
+                           [0, -1, 0]])
+
+        sharpened = cv2.filter2D(image_to_sharpen, -1, kernel)
+        self.Image = sharpened
         self.displayImage(2)
         
     #Fungsi untuk menampilkan citra pada GUI

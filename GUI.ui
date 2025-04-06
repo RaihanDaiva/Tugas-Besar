@@ -187,28 +187,28 @@
     <item row="1" column="2">
      <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="button_Brightness">
         <property name="text">
          <string>Brightness</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="button_Contrast">
         <property name="text">
          <string>Contrast</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_4">
+       <widget class="QPushButton" name="button_Smoothing">
         <property name="text">
          <string>Smoothing</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="button_Sharpening">
         <property name="text">
          <string>Sharpening</string>
         </property>
@@ -224,7 +224,7 @@
      <x>0</x>
      <y>0</y>
      <width>946</width>
-     <height>21</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuGrayscale">
@@ -246,6 +246,11 @@
   <action name="action_Biner">
    <property name="text">
     <string>Biner</string>
+   </property>
+  </action>
+  <action name="actionSharpening">
+   <property name="text">
+    <string>Sharpening</string>
    </property>
   </action>
  </widget>
