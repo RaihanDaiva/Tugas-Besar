@@ -21,7 +21,8 @@ class ShowImage(QMainWindow):
         self.button_Brightness.clicked.connect(self.brightness)
         self.button_Contrast.clicked.connect(self.contrast)
         self.button_Sharpening.clicked.connect(self.sharpening)
-        
+        self.button_simulateDay.clicked.connect(self.simulate_day)
+
     #Fungsi untuk membaca citra
     def load(self):
         self.Image = cv2.imread('sample2.jpg')
@@ -129,6 +130,27 @@ class ShowImage(QMainWindow):
 
         sharpened = cv2.filter2D(image_to_sharpen, -1, kernel)
         self.Image = sharpened
+        self.displayImage(2)
+
+    # Mengubah gambar malam menjadi seperti siang
+    def simulate_day(self):
+        # Convert to float32 for better math
+        self.Image = self.Image.astype(np.float32)
+
+        # Step 1: Brighten the image
+        self.Image *= 1.5  # Increase brightness
+
+        # Step 2: Slightly increase contrast
+        self.Image = (self.Image - 127) * 1.1 + 127
+
+        # Step 3: Add warmth — only if the image is RGB (i.e., 3 channels)
+        if len(self.Image.shape) == 3 and self.Image.shape[2] == 3:
+            self.Image[:, :, 0] *= 0.9  # Reduce blue
+            self.Image[:, :, 1] *= 1.1  # Boost green
+            self.Image[:, :, 2] *= 1.2  # Boost red
+
+        # Clip values to [0, 255] and convert back to uint8
+        self.Image = np.clip(self.Image, 0, 255).astype(np.uint8)
         self.displayImage(2)
         
     #Fungsi untuk menampilkan citra pada GUI
