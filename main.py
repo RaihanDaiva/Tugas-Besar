@@ -22,6 +22,7 @@ class ShowImage(QMainWindow):
         self.button_Contrast.clicked.connect(self.contrast)
         self.button_Sharpening.clicked.connect(self.sharpening)
         self.button_simulateDay.clicked.connect(self.simulate_day)
+        self.button_Smoothing.clicked.connect(self.smoothing)
 
         self.slider_brightness.setMinimum(-100)
         self.slider_brightness.setMaximum(100)
@@ -169,6 +170,38 @@ class ShowImage(QMainWindow):
 
         # Clip values to [0, 255] and convert back to uint8
         self.Image = np.clip(self.Image, 0, 255).astype(np.uint8)
+        self.displayImage(2)
+        
+    def smoothing(self):
+        if self.Image is None:
+            QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
+            return
+
+        # Pastikan gambar dalam format grayscale
+        if len(self.Image.shape) == 3:
+            img = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)
+        else:
+            img = self.Image
+
+        height, width = img.shape
+
+        # Siapkan gambar hasil smoothing
+        output = np.zeros((height, width), dtype=np.uint8)
+
+        # Looping untuk tiap piksel (kecuali tepi)
+        for y in range(1, height - 1):
+            for x in range(1, width - 1):
+                # Ambil blok 3x3 dari gambar asli
+                block = img[y-1:y+2, x-1:x+2]
+                
+                # Hitung rata-ratanya
+                mean_value = int(np.sum(block) / 9)
+                
+                # Simpan ke gambar hasil
+                output[y, x] = mean_value
+
+        # Perbarui self.Image dengan hasil smoothing
+        self.Image = output
         self.displayImage(2)
 
     def update_image(self):
