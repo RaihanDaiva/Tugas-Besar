@@ -23,6 +23,7 @@ class ShowImage(QMainWindow):
         self.button_Sharpening.clicked.connect(self.sharpening)
         self.button_simulateDay.clicked.connect(self.simulate_day)
         self.button_Smoothing.clicked.connect(self.smoothing)
+        self.actionEqualization.triggered.connect(self.equalization)
 
         self.slider_brightness.setMinimum(-100)
         self.slider_brightness.setMaximum(100)
@@ -149,6 +150,7 @@ class ShowImage(QMainWindow):
 
         sharpened = cv2.filter2D(image_to_sharpen, -1, kernel)
         self.Image = sharpened
+        self.Image_ori = self.Image
         self.displayImage(2)
 
     # Mengubah gambar malam menjadi seperti siang
@@ -209,8 +211,24 @@ class ShowImage(QMainWindow):
 
         # Perbarui self.Image dengan hasil smoothing
         self.Image = output
+        self.Image_ori = self.Image
         self.displayImage(2)
 
+    def equalization(self):
+        hist, bins = np.histogram(self.Image.flatten(), 256, [0, 256])
+        cdf = hist.cumsum()
+        cdf_normalized = cdf * hist.max() / cdf.max()
+        cdf_m = np.ma.masked_equal(cdf, 0)
+        cdf_m = (cdf_m - cdf_m.min()) * 255 / (cdf_m.max() - cdf_m.min())
+        cdf = np.ma.filled(cdf_m, 0).astype('uint8')
+        self.Image = cdf[self.Image]
+        self.displayImage(2)
+
+        plt.plot(cdf_normalized, color='b')
+        plt.hist(self.Image.flatten(), 256, [0, 256], color='r')
+        plt.xlim([0, 256])
+        plt.legend(('cdf', 'histogram'), loc='upper left')
+        plt.show()
 
     def update_image(self):
         if self.Image_ori is None:
