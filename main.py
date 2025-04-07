@@ -18,11 +18,12 @@ class ShowImage(QMainWindow):
         self.button_SaveCitraHasil.clicked.connect(self.saveHasil)
         self.action_Grayscale.triggered.connect(self.grayscale)
         self.action_Biner.triggered.connect(self.biner)
-        self.button_Brightness.clicked.connect(self.brightness)
-        self.button_Contrast.clicked.connect(self.contrast)
+        # self.button_Brightness.clicked.connect(self.brightness)
+        # self.button_Contrast.clicked.connect(self.contrast)
         self.button_Sharpening.clicked.connect(self.sharpening)
         self.button_simulateDay.clicked.connect(self.simulate_day)
         self.button_Smoothing.clicked.connect(self.smoothing)
+        self.button_ResetFilter.clicked.connect(self.imgReset)
         self.actionEqualization.triggered.connect(self.equalization)
 
         self.slider_brightness.setMinimum(-100)
@@ -35,6 +36,9 @@ class ShowImage(QMainWindow):
         self.slider_contrast.setValue(0)  # Default = no brightness change
         self.slider_contrast.valueChanged.connect(self.update_image)
 
+        self.Image_ori = None
+        self.Image_reset = None
+
 
     #Fungsi untuk membaca citra
     def load(self):
@@ -43,6 +47,7 @@ class ShowImage(QMainWindow):
         if file_name:
             self.Image = cv2.imread(file_name)
             self.Image_ori = self.Image
+            self.Image_reset = self.Image
             if self.Image is None:
                 QMessageBox.warning(self, "Error", "Gagal membaca gambar.")
                 return
@@ -74,6 +79,9 @@ class ShowImage(QMainWindow):
     
     #Fungsi untuk mengubah menjadi grayscale
     def grayscale(self):
+        if self.Image is None:
+            QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
+            return
         H, W = self.Image.shape[:2]
         gray = np.zeros((H, W), np.uint8)
         for i in range (H):
@@ -82,10 +90,14 @@ class ShowImage(QMainWindow):
                                      0.587 * self.Image[i, j, 1] +
                                      0.114 * self.Image[i, j, 2], 0, 255)
         self.Image = gray
+        self.Image_ori = self.Image
         self.displayImage(2)
         
     #Fungsi untuk mengubah menjadi biner
     def biner(self):
+        if self.Image is None:
+            QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
+            return
         H, W = self.Image.shape[:2] #untuk mengambil ukuran gambar
         threshold = 180
         for i in range (H): #iterasi untuk setiap pixel baris (tinggi)
@@ -155,6 +167,9 @@ class ShowImage(QMainWindow):
 
     # Mengubah gambar malam menjadi seperti siang
     def simulate_day(self):
+        if self.Image is None:
+            QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
+            return
         # Convert to float32 for better math
         self.Image = self.Image.astype(np.float32)
 
@@ -172,6 +187,7 @@ class ShowImage(QMainWindow):
 
         # Clip values to [0, 255] and convert back to uint8
         self.Image = np.clip(self.Image, 0, 255).astype(np.uint8)
+        self.Image_ori = self.Image
         self.displayImage(2)
         
     def smoothing(self):
@@ -215,6 +231,9 @@ class ShowImage(QMainWindow):
         self.displayImage(2)
 
     def equalization(self):
+        if self.Image is None:
+            QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
+            return
         hist, bins = np.histogram(self.Image.flatten(), 256, [0, 256])
         cdf = hist.cumsum()
         cdf_normalized = cdf * hist.max() / cdf.max()
@@ -234,6 +253,10 @@ class ShowImage(QMainWindow):
         if self.Image_ori is None:
             return
 
+        if self.Image is None:
+            QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
+            return
+
         # Get values from sliders
         brightness = self.slider_brightness.value()
         contrast = self.slider_contrast.value()
@@ -251,6 +274,14 @@ class ShowImage(QMainWindow):
         img = np.clip(img, 0, 255).astype(np.uint8)
 
         self.Image = img
+        self.displayImage(mode=2)
+
+    def imgReset(self):
+        if self.Image is None:
+            QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
+            return
+        self.Image = self.Image_reset
+        self.Image_ori = self.Image_reset
         self.displayImage(mode=2)
         
     #Fungsi untuk menampilkan citra pada GUI
