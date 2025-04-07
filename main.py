@@ -7,6 +7,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from matplotlib import pyplot as plt
+import pandas as pd
 
 class ShowImage(QMainWindow):
     def __init__(self):
@@ -25,6 +26,9 @@ class ShowImage(QMainWindow):
         self.button_Smoothing.clicked.connect(self.smoothing)
         self.button_ResetFilter.clicked.connect(self.imgReset)
         self.actionEqualization.triggered.connect(self.equalization)
+
+        self.button_SaveCitraTxt.clicked.connect(self.saveTxt)
+        self.button_SaveCitraXlsx.clicked.connect(self.saveExcel)
 
         self.slider_brightness.setMinimum(-100)
         self.slider_brightness.setMaximum(100)
@@ -76,7 +80,37 @@ class ShowImage(QMainWindow):
             QMessageBox.information(self, "Berhasil", "Citra berhasil disimpan sebagai 'Citra_Asli.jpg'.")
         else:
             QMessageBox.warning(self, "Gagal", "Gagal menyimpan citra.")
-    
+
+    def saveTxt(self):
+        if self.Image is None:
+            print("No image to save.")
+            return
+
+        np.savetxt("Citra_Hasil.txt",
+                   self.Image.reshape(-1, self.Image.shape[-1]) if self.Image.ndim == 3 else self.Image, fmt='%d')
+        QMessageBox.information(self, "Berhasil", "Citra berhasil disimpan sebagai 'Citra_Hasil.txt'.")
+        print(f"Image saved as text to 'Citra_Hasil.txt'" )
+
+    def saveExcel(self):
+        if self.Image is None:
+            print("No image to save.")
+            return
+
+            # If RGB image
+        if self.Image.ndim == 3:
+            # Save each channel in separate sheets
+            with pd.ExcelWriter("Citra_Hasil.xlsx") as writer:
+                for i, channel in enumerate(['Blue', 'Green', 'Red']):  # OpenCV uses BGR order
+                    df = pd.DataFrame(self.Image[:, :, i])
+                    df.to_excel(writer, sheet_name=channel, index=False, header=False)
+        else:
+            # Grayscale
+            df = pd.DataFrame(self.Image)
+            df.to_excel("Citra_Hasil.xlsx", index=False, header=False)
+
+        QMessageBox.information(self, "Berhasil", "Citra berhasil disimpan sebagai 'Citra_Hasil.xlsx'.")
+
+
     #Fungsi untuk mengubah menjadi grayscale
     def grayscale(self):
         if self.Image is None:
@@ -241,6 +275,7 @@ class ShowImage(QMainWindow):
         cdf_m = (cdf_m - cdf_m.min()) * 255 / (cdf_m.max() - cdf_m.min())
         cdf = np.ma.filled(cdf_m, 0).astype('uint8')
         self.Image = cdf[self.Image]
+        self.Image_ori = self.Image
         self.displayImage(2)
 
         plt.plot(cdf_normalized, color='b')
@@ -283,6 +318,7 @@ class ShowImage(QMainWindow):
         self.Image = self.Image_reset
         self.Image_ori = self.Image_reset
         self.displayImage(mode=2)
+
         
     #Fungsi untuk menampilkan citra pada GUI
     def displayImage(self, mode=1):
@@ -312,6 +348,6 @@ class ShowImage(QMainWindow):
             
 app = QtWidgets.QApplication(sys.argv)
 window = ShowImage()
-window.setWindowTitle('Pertemuan 1')
+window.setWindowTitle('High Light - Perbaikan Citra Gelap')
 window.show()
 sys.exit(app.exec_())
