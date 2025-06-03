@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUi
 from matplotlib import pyplot as plt
 import pandas as pd
+import imutils  # Import imutils for additional utility functions like image resizing
 
 class ShowImage(QMainWindow):
     def __init__(self):
@@ -39,6 +40,8 @@ class ShowImage(QMainWindow):
         self.slider_contrast.setMaximum(100)
         self.slider_contrast.setValue(0)  # Default = no brightness change
         self.slider_contrast.valueChanged.connect(self.update_image)
+        
+        self.button_deteksiManusia.clicked.connect(self.DeteksiManusia)
 
         self.Image_ori = None
         self.Image_reset = None
@@ -116,13 +119,17 @@ class ShowImage(QMainWindow):
         if self.Image is None:
             QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
             return
-        H, W = self.Image.shape[:2]
-        gray = np.zeros((H, W), np.uint8)
-        for i in range (H):
-            for j in range (W):
-                gray[i, j] = np.clip(0.299 * self.Image[i, j, 0] +
-                                     0.587 * self.Image[i, j, 1] +
-                                     0.114 * self.Image[i, j, 2], 0, 255)
+        
+        # Periksa apakah gambar berwarna
+        if len(self.Image.shape) == 3 and self.Image.shape[2] == 3:
+            # Konversi ke float untuk akurasi sebelum dikonversi ke uint8
+            gray = (0.299 * self.Image[:, :, 0] +
+                    0.587 * self.Image[:, :, 1] +
+                    0.114 * self.Image[:, :, 2]).astype(np.uint8)
+        else:
+            # Jika sudah grayscale
+            gray = self.Image.copy()
+
         self.Image = gray
         self.Image_ori = self.Image
         self.displayImage(2)
@@ -345,6 +352,19 @@ class ShowImage(QMainWindow):
             self.citra_hasil.setPixmap(scaled_pix)
             self.citra_hasil.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             # self.citra_hasil.setPixmap(QPixmap.fromImage(img))
+            
+    def DeteksiManusia(self):
+        hog = cv2.HOGDescriptor()
+        hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
+        self.Image = imutils.resize(self.Image, width=min(400, self.Image.shape[0]))
+
+        (regions, _) = hog.detectMultiScale(self.Image, winStride=(4, 4), padding=(4, 4), scale=1.05)
+
+        for (x, y, w, h) in regions:
+            cv2.rectangle(self.Image, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            
+        self.displayImage(2)  # Display the original image with detections
+
             
 app = QtWidgets.QApplication(sys.argv)
 window = ShowImage()
