@@ -113,19 +113,30 @@ class ShowImage(QMainWindow):
 
     #Fungsi untuk mengubah menjadi grayscale
     def grayscale(self):
+        # Cek apakah gambar sudah dimuat
         if self.Image is None:
             QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
             return
+
+        # Ambil tinggi (H) dan lebar (W) gambar
         H, W = self.Image.shape[:2]
+
+        # Inisialisasi array kosong untuk menyimpan hasil grayscale
         gray = np.zeros((H, W), np.uint8)
-        for i in range (H):
-            for j in range (W):
+
+        # Loop melalui setiap piksel gambar
+        for i in range(H):
+            for j in range(W):
+                # Hitung nilai grayscale berdasarkan formula luminance (standar ITU-R BT.601)
+                # Gray = 0.299*Red + 0.587*Green + 0.114*Blue
                 gray[i, j] = np.clip(0.299 * self.Image[i, j, 0] +
                                      0.587 * self.Image[i, j, 1] +
                                      0.114 * self.Image[i, j, 2], 0, 255)
+
+        # Update self.Image dengan hasil konversi grayscale
         self.Image = gray
-        self.Image_ori = self.Image
-        self.displayImage(2)
+        self.Image_ori = self.Image  # Simpan sebagai citra asli baru
+        self.displayImage(2)  # Tampilkan hasil grayscale di label hasil
         
     #Fungsi untuk mengubah menjadi biner
     def biner(self):
@@ -147,139 +158,199 @@ class ShowImage(QMainWindow):
 
     def brightness(self):
         try:
+            # Mengubah citra ke grayscale jika belum dalam format grayscale
             self.Image = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)
         except:
+            # Jika gambar sudah grayscale atau terjadi error, lanjutkan tanpa mengubah
             pass
+
+        # Mendapatkan tinggi (H) dan lebar (W) dari citra
         H, W = self.Image.shape[:2]
+
+        # Menentukan nilai peningkatan kecerahan
         brightness = 80
+
+        # Melakukan iterasi untuk setiap piksel dalam citra
         for i in range(H):
             for j in range(W):
+                # Mengambil nilai intensitas piksel pada posisi (i, j)
                 a = self.Image.item(i, j)
+                # Menambahkan nilai brightness dan memastikan hasilnya berada dalam rentang 0–255
                 b = np.clip(a + brightness, 0, 255)
-
+                # Menetapkan nilai piksel baru setelah ditingkatkan kecerahannya
                 self.Image[i, j] = b
 
+        # Menampilkan citra hasil setelah peningkatan kecerahan
         self.displayImage(2)
 
     def contrast(self):
+        # Coba konversi gambar ke grayscale jika masih dalam format berwarna
         try:
             self.Image = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)
         except:
-            pass
+            pass  # Jika gambar sudah grayscale, abaikan error
+
+        # Ambil tinggi dan lebar gambar
         H, W = self.Image.shape[:2]
+
+        # Nilai pengali untuk meningkatkan kontras
         contrast = 1.7
+
+        # Loop melalui setiap piksel
         for i in range(H):
             for j in range(W):
-                a = self.Image.item(i, j)
-                b = np.clip(a * contrast, 0, 255)
+                a = self.Image.item(i, j)  # Ambil nilai piksel pada posisi (i, j)
+                b = np.clip(a * contrast, 0, 255)  # Tingkatkan nilai piksel dan batasi antara 0–255
 
-                self.Image[i, j] = b
+                self.Image[i, j] = b  # Simpan kembali ke gambar
 
+        # Tampilkan gambar hasil kontras pada label hasil (mode 2)
         self.displayImage(2)
 
     def sharpening(self):
+        # Cek apakah gambar sudah dimuat
         if self.Image is None:
             QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
             return
 
+        # Periksa apakah gambar sudah dalam format grayscale
         if len(self.Image.shape) == 2:
-            # Citra sudah grayscale
+            # Jika sudah grayscale, langsung gunakan
             image_to_sharpen = self.Image
         else:
-            # Jika masih berwarna, konversi dulu ke grayscale
+            # Jika gambar masih berwarna, konversi ke grayscale
             image_to_sharpen = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)
 
-            # Kernel sharpening
+        # Definisikan kernel untuk sharpening (penajaman citra)
         kernel = np.array([[0, -1, 0],
                            [-1, 5, -1],
                            [0, -1, 0]])
 
+        # Terapkan kernel pada citra dengan operasi filter 2D
         sharpened = cv2.filter2D(image_to_sharpen, -1, kernel)
+
+        # Simpan hasil sebagai citra utama
         self.Image = sharpened
-        self.Image_ori = self.Image
-        self.displayImage(2)
+        self.Image_ori = self.Image  # Simpan juga sebagai image original baru
+        self.displayImage(2)  # Tampilkan hasil sharpening di antarmuka
 
     # Mengubah gambar malam menjadi seperti siang
     def simulate_day(self):
         if self.Image is None:
             QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
             return
-        # Convert to float32 for better math
+
+        # Mengubah tipe data ke float32 agar perhitungan lebih akurat
         self.Image = self.Image.astype(np.float32)
 
-        # Step 1: Brighten the image
-        self.Image *= 1.5  # Increase brightness
+        # Langkah 1: Meningkatkan kecerahan gambar
+        self.Image *= 1.5  # Menambah tingkat kecerahan sebesar 1.5 kali
 
-        # Step 2: Slightly increase contrast
-        self.Image = (self.Image - 127) * 1.1 + 127
+        # Langkah 2: Meningkatkan kontras secara halus
+        self.Image = (self.Image - 127) * 1.1 + 127  # Penyesuaian kontras terhadap titik tengah intensitas
 
-        # Step 3: Add warmth — only if the image is RGB (i.e., 3 channels)
+        # Langkah 3: Menambahkan nuansa hangat — hanya diterapkan jika citra berformat RGB (3 kanal warna)
         if len(self.Image.shape) == 3 and self.Image.shape[2] == 3:
-            self.Image[:, :, 0] *= 0.9  # Reduce blue
-            self.Image[:, :, 1] *= 1.1  # Boost green
-            self.Image[:, :, 2] *= 1.2  # Boost red
+            self.Image[:, :, 0] *= 0.9  # Mengurangi intensitas warna biru
+            self.Image[:, :, 1] *= 1.1  # Meningkatkan intensitas warna hijau
+            self.Image[:, :, 2] *= 1.2  # Meningkatkan intensitas warna merah
 
-        # Clip values to [0, 255] and convert back to uint8
+        # Membatasi nilai piksel dalam rentang [0, 255] dan mengubah kembali ke tipe uint8
         self.Image = np.clip(self.Image, 0, 255).astype(np.uint8)
+
+        # Menyimpan hasil transformasi dan menampilkan citra yang telah diubah
         self.Image_ori = self.Image
         self.displayImage(2)
-        
+
     def smoothing(self):
+        # Cek apakah gambar sudah dimuat
         if self.Image is None:
             QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
             return
 
         # Pastikan gambar dalam format grayscale
         if len(self.Image.shape) == 3:
-            img = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)
+            img = cv2.cvtColor(self.Image, cv2.COLOR_BGR2GRAY)  # Konversi ke grayscale jika gambar berwarna
         else:
-            img = self.Image
+            img = self.Image  # Jika sudah grayscale, langsung gunakan
 
-        height, width = img.shape
+        height, width = img.shape  # Ambil ukuran gambar
 
-        # Siapkan gambar hasil smoothing
+        # Siapkan gambar kosong untuk menyimpan hasil smoothing
         output = np.zeros((height, width), dtype=np.uint8)
 
-        # Definisikan kernel 3x3 mean filter
+        # Definisikan kernel mean filter 3x3 (rata-rata dari 9 elemen)
         kernel = np.array([
             [1, 1, 1],
             [1, 1, 1],
             [1, 1, 1]
-        ], dtype=np.float32) / 9  # rata-rata
+        ], dtype=np.float32) / 9
 
-        # Looping untuk tiap piksel (kecuali tepi)
+        # Iterasi setiap piksel gambar kecuali bagian tepi
         for y in range(1, height - 1):
             for x in range(1, width - 1):
-                # Ambil blok 3x3 dari gambar asli
-                block = img[y-1:y+2, x-1:x+2]
+                # Ambil blok 3x3 piksel di sekitar titik (x, y)
+                block = img[y - 1:y + 2, x - 1:x + 2]
 
-                # Hitung hasil konvolusi manual
+                # Lakukan operasi konvolusi manual antara blok dan kernel
                 value = np.sum(block * kernel)
-                
-                # Simpan ke gambar hasil
+
+                # Simpan hasilnya ke gambar output
                 output[y, x] = int(value)
 
-        # Perbarui self.Image dengan hasil smoothing
+        # Perbarui self.Image dengan gambar hasil smoothing
         self.Image = output
-        self.Image_ori = self.Image
-        self.displayImage(2)
+        self.Image_ori = self.Image  # Simpan juga sebagai image original baru
+        self.displayImage(2)  # Tampilkan hasil smoothing di antarmuka
 
     def equalization(self):
+        # Cek apakah citra sudah dimuat atau belum
         if self.Image is None:
             QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
             return
+
+        # Hitung histogram dari citra
+        # np.histogram menghasilkan 2 array: hist (frekuensi) dan bins (rentang nilai)
         hist, bins = np.histogram(self.Image.flatten(), 256, [0, 256])
+
+        # Hitung fungsi distribusi kumulatif (CDF)
         cdf = hist.cumsum()
+
+        # Normalisasi CDF hanya untuk visualisasi (tidak digunakan untuk transformasi)
         cdf_normalized = cdf * hist.max() / cdf.max()
+
+        # Masking nilai nol agar tidak menyebabkan pembagian oleh nol saat normalisasi CDF
         cdf_m = np.ma.masked_equal(cdf, 0)
+
+        # Hitung rumus equalization:
+        # Normalisasi CDF untuk rentang [0, 255] sesuai dengan intensitas 8-bit
         cdf_m = (cdf_m - cdf_m.min()) * 255 / (cdf_m.max() - cdf_m.min())
+
+        # Ganti nilai-nilai yang di-mask (nol) dengan nol kembali
         cdf = np.ma.filled(cdf_m, 0).astype('uint8')
+
+        # Transformasi citra menggunakan nilai CDF hasil normalisasi
         self.Image = cdf[self.Image]
+
+        # Simpan hasil transformasi ke variabel Image_ori (jika diperlukan)
         self.Image_ori = self.Image
+
+        # Tampilkan citra hasil transformasi
         self.displayImage(2)
 
+        # Visualisasi hasil:
+        # 1. Plot CDF yang sudah dinormalisasi (garis biru)
+        # 2. Histogram dari citra hasil equalization (warna merah)
         plt.plot(cdf_normalized, color='b')
         plt.hist(self.Image.flatten(), 256, [0, 256], color='r')
+
+        # Cetak nilai-nilai CDF dan histogram ke konsol
+        print("== Histogram ==")
+        print(cdf_normalized)
+        print("== CDF ==")
+        print(self.Image.flatten())
+
+        # Atur tampilan grafik
         plt.xlim([0, 256])
         plt.legend(('cdf', 'histogram'), loc='upper left')
         plt.show()
