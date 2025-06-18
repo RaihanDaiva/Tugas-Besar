@@ -9,6 +9,9 @@ from PyQt5.uic import loadUi
 from matplotlib import pyplot as plt
 import pandas as pd
 import imutils  # Import imutils for additional utility functions like image resizing
+import os
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = '/usr/lib/x86_64-linux-gnu/qt5/plugins'
+
 
 class ShowImage(QMainWindow):
     def __init__(self):
@@ -140,6 +143,8 @@ class ShowImage(QMainWindow):
         if self.Image is None:
             QMessageBox.warning(self, "Error", "Belum ada citra yang dimuat.")
             return
+        
+        
         H, W = self.Image.shape[:2] #untuk mengambil ukuran gambar
         threshold = 180
         for i in range (H): #iterasi untuk setiap pixel baris (tinggi)
@@ -221,7 +226,7 @@ class ShowImage(QMainWindow):
         # Definisikan kernel untuk sharpening (penajaman citra)
         kernel = np.array([[0, -1, 0],
                            [-1, 5, -1],
-                           [0, -1, 0]])
+                           [0, -1, 0],])
 
         # Terapkan kernel pada citra dengan operasi filter 2D
         sharpened = cv2.filter2D(image_to_sharpen, -1, kernel)
@@ -331,6 +336,7 @@ class ShowImage(QMainWindow):
 
         # Simpan hasil transformasi ke variabel Image_ori (jika diperlukan)
         self.Image_ori = self.Image
+        
 
         # Tampilkan citra hasil transformasi
         self.displayImage(2)
@@ -409,11 +415,11 @@ class ShowImage(QMainWindow):
             self.citra_Asli.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             # self.citra_Asli.setPixmap(QPixmap.fromImage(img))
         elif mode == 2:
-            scaled_pix = pix.scaled(self.citra_hasil.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            scaled_pix = pix.scaled(self.citra_hasil.size(), Qt.KeepAspectRatio, Qt.SmoothTransfozrmation)
             self.citra_hasil.setPixmap(scaled_pix)
             self.citra_hasil.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
             # self.citra_hasil.setPixmap(QPixmap.fromImage(img))
-            
+        
     def DeteksiManusia(self):
         hog = cv2.HOGDescriptor()
         hog.setSVMDetector(cv2.HOGDescriptor_getDefaultPeopleDetector())
@@ -423,7 +429,6 @@ class ShowImage(QMainWindow):
 
         for (x, y, w, h) in regions:
             cv2.rectangle(self.Image, (x, y), (x + w, y + h), (0, 0, 255), 2)
-            
         self.displayImage(2)  # Display the original image with detections
 
             
